@@ -44,7 +44,7 @@
     
     <!-- STEP 1: ADD YOUR SUPABASE CREDENTIALS HERE -->
     <script>
-       const SUPABASE_URL = 'https://guifsklngiccuhwoamam.supabase.co';
+        const SUPABASE_URL = 'https://guifsklngiccuhwoamam.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1aWZza2xuZ2ljY3Vod29hbWFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNjMyNjYsImV4cCI6MjA3NzYzOTI2Nn0.JeowD3sLE0-g_R_iPdZLySCAZ6AvC0HPdJ3LUnivPLU';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
@@ -388,8 +388,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                     console.log('Initializing trading journal...');
                     try {
                         await this.loadAccounts();
+                        console.log('Accounts loaded, now loading trades...');
                         await this.loadTrades();
-                        setTimeout(() => this.initCharts(), 500);
+                        console.log('Init complete, creating charts...');
+                        setTimeout(() => {
+                            this.initCharts();
+                            console.log('Charts initialized');
+                        }, 500);
                     } catch (err) {
                         console.error('Initialization error:', err);
                     }
@@ -451,15 +456,26 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 get currentAccountData() { return this.accounts.find(a => a.id === this.currentAccount) || this.accounts[0]; },
 
                 async loadTrades() {
-                    if (!this.currentAccount) return;
-                    const { data, error } = await supabase.from('trades').select('*').eq('user_id', currentUser.id).eq('account_id', this.currentAccount).order('date', { ascending: false });
-                    if (error) {
-                        console.error('Error loading trades:', error);
+                    if (!this.currentAccount) {
+                        console.log('No current account, waiting...');
+                        return;
+                    }
+                    console.log('Loading trades for account:', this.currentAccount);
+                    try {
+                        const { data, error } = await supabase.from('trades').select('*').eq('user_id', currentUser.id).eq('account_id', this.currentAccount).order('date', { ascending: false });
+                        if (error) {
+                            console.error('Error loading trades:', error);
+                            this.trades = [];
+                        } else {
+                            this.trades = data || [];
+                            console.log('Trades loaded successfully:', data.length, 'trades');
+                            // Force UI update after trades load
+                            await this.$nextTick();
+                            setTimeout(() => this.updateCharts(), 200);
+                        }
+                    } catch (err) {
+                        console.error('Exception loading trades:', err);
                         this.trades = [];
-                    } else {
-                        this.trades = data || [];
-                        console.log('Trades loaded:', data);
-                        this.updateCharts();
                     }
                 },
 
