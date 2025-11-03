@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePro Journal - Full Cloud Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0ea5e9',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .dark .gradient-bg { background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .input-modern { transition: all 0.3s ease; }
+        .input-modern:focus { transform: scale(1.02); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-in { animation: slideIn 0.5s ease-out; }
+        .auth-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    
+    <!-- STEP 1: ADD YOUR SUPABASE CREDENTIALS HERE -->
+    <script>
+        const SUPABASE_URL = 'YOUR_PROJECT_URL_HERE';
+        const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-container" style="display: none;">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <i class="fas fa-chart-line text-6xl text-purple-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">TradePro Journal</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Cloud Edition</p>
+            </div>
+            <div id="loginForm">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Welcome Back</h3>
+                <form id="loginFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <input id="loginEmail" type="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                        <input id="loginPassword" type="password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </form>
+                <p class="text-center mt-4 text-gray-600 dark:text-gray-400">Don't have an account? <a href="#" onclick="showSignup(); return false;" class="text-blue-600 hover:text-blue-700 font-semibold">Sign Up</a></p>
+            </div>
+            <div id="signupForm" style="display:none;">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Create Account</h3>
+                <form id="signupFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <input id="signupEmail" type="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                        <input id="signupPassword" type="password" required minlength="6" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="••••••••">
+                        <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300">
+                        <i class="fas fa-user-plus mr-2"></i>Sign Up
+                    </button>
+                </form>
+                <p class="text-center mt-4 text-gray-600 dark:text-gray-400">Already have an account? <a href="#" onclick="showLogin(); return false;" class="text-blue-600 hover:text-blue-700 font-semibold">Login</a></p>
+            </div>
+            <div id="authMessage" class="mt-4 p-3 rounded-lg text-sm text-center" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" x-data="tradingJournal()" x-init="init()" style="display:none;">
+        <!-- Navigation -->
+        <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-chart-line text-3xl"></i>
+                        <h1 class="text-2xl font-bold">TradePro Journal</h1>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                                <i class="fas fa-wallet"></i>
+                                <span x-text="currentAccountData?.name || 'Select Account'"></span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
+                                <div class="py-2">
+                                    <template x-for="account in accounts" :key="account.id">
+                                        <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between" :class="account.id === currentAccount ? 'bg-blue-50 dark:bg-blue-900/30' : ''" @click="switchAccount(account.id); open = false">
+                                            <div>
+                                                <div class="font-semibold text-gray-800 dark:text-white" x-text="account.name"></div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400" x-text="'$' + account.balance.toFixed(2)"></div>
+                                            </div>
+                                            <button @click.stop="deleteAccount(account.id)" class="text-red-500 hover:text-red-700 p-1" x-show="accounts.length > 1">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <div class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2 px-4">
+                                        <button @click="showAccountModal = true; open = false" class="w-full text-left text-blue-500 hover:text-blue-700 font-medium text-sm flex items-center">
+                                            <i class="fas fa-plus mr-2"></i>Add New Account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button @click="currentView = 'dashboard'" :class="currentView === 'dashboard' ? 'text-white' : 'text-gray-300'" class="hover:text-white transition-colors">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </button>
+                        <button @click="currentView = 'trades'" :class="currentView === 'trades' ? 'text-white' : 'text-gray-300'" class="hover:text-white transition-colors">
+                            <i class="fas fa-list mr-2"></i>Trades
+                        </button>
+                        <button @click="currentView = 'analytics'" :class="currentView === 'analytics' ? 'text-white' : 'text-gray-300'" class="hover:text-white transition-colors">
+                            <i class="fas fa-chart-bar mr-2"></i>Analytics
+                        </button>
+                        <span class="text-sm" x-text="userEmail"></span>
+                        <button onclick="logout()" class="bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard View -->
+        <div x-show="currentView === 'dashboard'" class="container mx-auto px-4 py-8 animate-slide-in">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-hover">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full flex-shrink-0">
+                            <i class="fas fa-wallet text-indigo-500 text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Account Size</p>
+                            <p class="text-lg font-bold text-gray-800 dark:text-white mt-1 break-words" x-text="'$' + Math.round(currentAccountData?.balance || 0)"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-hover">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-blue-100 dark:bg-blue-900 p-2 rounded-full flex-shrink-0">
+                            <i class="fas fa-exchange-alt text-blue-500 text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Total Trades</p>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1" x-text="trades.length"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-hover">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-green-100 dark:bg-green-900 p-2 rounded-full flex-shrink-0">
+                            <i class="fas fa-trophy text-green-500 text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Win Rate</p>
+                            <p class="text-2xl font-bold text-green-600 mt-1" x-text="winRate + '%'"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-hover">
+                    <div class="flex items-start space-x-3">
+                        <div :class="totalPnL >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'" class="p-2 rounded-full flex-shrink-0">
+                            <i :class="totalPnL >= 0 ? 'text-green-500' : 'text-red-500'" class="fas fa-dollar-sign text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Total P&L</p>
+                            <p class="text-2xl font-bold mt-1" :class="totalPnL >= 0 ? 'text-green-600' : 'text-red-600'" x-text="'$' + totalPnL.toFixed(2)"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-hover">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-purple-100 dark:bg-purple-900 p-2 rounded-full flex-shrink-0">
+                            <i class="fas fa-balance-scale text-purple-500 text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Avg Risk/Reward</p>
+                            <p class="text-2xl font-bold text-purple-600 mt-1" x-text="avgRR.toFixed(2)"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Trade -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center">
+                    <i class="fas fa-plus-circle text-primary mr-3"></i>Quick Add Trade
+                </h2>
+                <form @submit.prevent="addTrade" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Symbol</label><input x-model="newTrade.symbol" type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="EURUSD"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label><select x-model="newTrade.type" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none"><option value="Long">Long</option><option value="Short">Short</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Entry Price</label><input x-model="newTrade.entry" type="number" step="0.00001" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="1.0850"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Exit Price</label><input x-model="newTrade.exit" type="number" step="0.00001" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="1.0900"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Position Size</label><input x-model="newTrade.size" type="number" step="0.01" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="1.0"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stop Loss</label><input x-model="newTrade.stopLoss" type="number" step="0.00001" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="1.0800"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">P&L ($)</label><input x-model="newTrade.pnlAmount" type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="+500 or -200"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Strategy</label><select x-model="newTrade.strategy" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none"><option value="Breakout">Breakout</option><option value="Trend Following">Trend Following</option><option value="Reversal">Reversal</option><option value="Range Trading">Range Trading</option><option value="Scalping">Scalping</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label><input x-model="newTrade.date" type="date" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none"></div>
+                    <div class="md:col-span-2 lg:col-span-3"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label><textarea x-model="newTrade.notes" rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Trade notes..."></textarea></div>
+                    <div class="md:col-span-2 lg:col-span-3"><button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"><i class="fas fa-save mr-2"></i><span x-text="editingIndex >= 0 ? 'Update Trade' : 'Add Trade'"></span></button></div>
+                </form>
+            </div>
+
+            <!-- Equity Curve -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center">
+                    <i class="fas fa-chart-area text-primary mr-3"></i>Equity Curve
+                </h2>
+                <canvas id="equityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Trades View -->
+        <div x-show="currentView === 'trades'" class="container mx-auto px-4 py-8 animate-slide-in">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+                        <i class="fas fa-list text-primary mr-3"></i>All Trades
+                    </h2>
+                    <input x-model="searchQuery" type="text" placeholder="Search..." class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white input-modern focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead><tr class="border-b border-gray-200 dark:border-gray-700"><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Date</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Symbol</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Type</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Entry</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Exit</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">P&L</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Strategy</th><th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Actions</th></tr></thead>
+                        <tbody>
+                            <template x-for="(trade, index) in filteredTrades" :key="trade.id">
+                                <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300" x-text="trade.date"></td>
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold" x-text="trade.symbol"></td>
+                                    <td class="py-3 px-4"><span :class="trade.type === 'Long' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'" class="px-2 py-1 rounded-full text-xs font-semibold" x-text="trade.type"></span></td>
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300" x-text="trade.entry"></td>
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300" x-text="trade.exit"></td>
+                                    <td class="py-3 px-4 font-semibold" :class="trade.pnl >= 0 ? 'text-green-600' : 'text-red-600'" x-text="'$' + trade.pnl.toFixed(2)"></td>
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300" x-text="trade.strategy"></td>
+                                    <td class="py-3 px-4">
+                                        <button @click="editTrade(index)" class="text-green-500 hover:text-green-700 transition-colors mr-3"><i class="fas fa-edit"></i></button>
+                                        <button @click="deleteTrade(index)" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <div x-show="filteredTrades.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>No trades found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics View -->
+        <div x-show="currentView === 'analytics'" class="container mx-auto px-4 py-8 animate-slide-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center"><i class="fas fa-chart-pie text-primary mr-3"></i>Win/Loss Distribution</h3>
+                    <canvas id="winLossChart"></canvas>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center"><i class="fas fa-layer-group text-primary mr-3"></i>Strategy Performance</h3>
+                    <canvas id="strategyChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center"><i class="fas fa-calendar-alt text-primary mr-3"></i>Monthly Performance</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Account Modal -->
+        <div x-show="showAccountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Add New Account</h3>
+                    <button @click="showAccountModal = false" class="text-gray-500 hover:text-gray-700 dark:text-gray-400"><i class="fas fa-times"></i></button>
+                </div>
+                <form @submit.prevent="addAccount" class="space-y-4">
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Name</label><input x-model="newAccountName" type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="My Trading Account"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Starting Balance ($)</label><input x-model="newAccountBalance" type="number" step="0.01" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary focus:outline-none" placeholder="10000"></div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300"><i class="fas fa-plus mr-2"></i>Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userEmail = '';
+
+        window.addEventListener('load', async () => { await checkAuth(); });
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                userEmail = session.user.email;
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+            } else {
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        }
+
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            showAuthMessage('Logging in...', 'info');
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) showAuthMessage('Login failed: ' + error.message, 'error');
+            else { showAuthMessage('Login successful!', 'success'); setTimeout(() => checkAuth(), 1000); }
+        });
+
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            showAuthMessage('Creating account...', 'info');
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) showAuthMessage('Signup failed: ' + error.message, 'error');
+            else { showAuthMessage('Account created! You can now login.', 'success'); setTimeout(() => showLogin(), 2000); }
+        });
+
+        async function logout() { await supabase.auth.signOut(); checkAuth(); }
+        function showSignup() { document.getElementById('loginForm').style.display = 'none'; document.getElementById('signupForm').style.display = 'block'; document.getElementById('authMessage').style.display = 'none'; }
+        function showLogin() { document.getElementById('signupForm').style.display = 'none'; document.getElementById('loginForm').style.display = 'block'; document.getElementById('authMessage').style.display = 'none'; }
+        function showAuthMessage(message, type) {
+            const msgEl = document.getElementById('authMessage');
+            msgEl.textContent = message;
+            msgEl.style.display = 'block';
+            if (type === 'error') msgEl.className = 'mt-4 p-3 rounded-lg text-sm text-center bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            else if (type === 'success') msgEl.className = 'mt-4 p-3 rounded-lg text-sm text-center bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            else msgEl.className = 'mt-4 p-3 rounded-lg text-sm text-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        }
+
+        function tradingJournal() {
+            return {
+                currentView: 'dashboard',
+                darkMode: false,
+                accounts: [],
+                currentAccount: null,
+                trades: [],
+                searchQuery: '',
+                showAccountModal: false,
+                newAccountName: '',
+                newAccountBalance: 10000,
+                editingIndex: -1,
+                userEmail: userEmail,
+                newTrade: { symbol: '', type: 'Long', entry: '', exit: '', size: '', stopLoss: '', pnlAmount: '', strategy: 'Breakout', date: new Date().toISOString().split('T')[0], notes: '' },
+                equityChart: null,
+                winLossChart: null,
+                strategyChart: null,
+                monthlyChart: null,
+
+                async init() {
+                    console.log('Initializing trading journal...');
+                    try {
+                        await this.loadAccounts();
+                        console.log('Accounts loaded, now loading trades...');
+                        await this.loadTrades();
+                        console.log('Init complete, creating charts...');
+                        setTimeout(() => {
+                            this.initCharts();
+                            console.log('Charts initialized');
+                        }, 500);
+                    } catch (err) {
+                        console.error('Initialization error:', err);
+                    }
+                },
+
+                async loadAccounts() {
+                    const { data, error } = await supabase.from('accounts').select('*').eq('user_id', currentUser.id);
+                    if (error) {
+                        console.error('Error loading accounts:', error);
+                        return;
+                    }
+                    if (data && data.length > 0) {
+                        this.accounts = data;
+                        this.currentAccount = data[0].id;
+                        console.log('Accounts loaded:', data);
+                    } else {
+                        await this.createDefaultAccount();
+                    }
+                },
+
+                async createDefaultAccount() {
+                    const { data, error } = await supabase.from('accounts').insert([{ user_id: currentUser.id, name: 'Main Account', balance: 10000 }]).select();
+                    if (data && data.length > 0) {
+                        this.accounts = data;
+                        this.currentAccount = data[0].id;
+                    }
+                },
+
+                async addAccount() {
+                    if (!this.newAccountName.trim()) { alert('Please enter account name'); return; }
+                    const { data, error } = await supabase.from('accounts').insert([{ user_id: currentUser.id, name: this.newAccountName, balance: parseFloat(this.newAccountBalance) || 10000 }]).select();
+                    if (data && data.length > 0) {
+                        this.accounts.push(data[0]);
+                        this.currentAccount = data[0].id;
+                        this.showAccountModal = false;
+                        this.newAccountName = '';
+                        this.newAccountBalance = 10000;
+                        await this.loadTrades();
+                    }
+                },
+
+                async deleteAccount(accountId) {
+                    if (this.accounts.length === 1) { alert('Cannot delete the last account'); return; }
+                    if (confirm('Delete this account and all its trades?')) {
+                        await supabase.from('accounts').delete().eq('id', accountId);
+                        this.accounts = this.accounts.filter(a => a.id !== accountId);
+                        if (this.currentAccount === accountId) this.currentAccount = this.accounts[0].id;
+                        await this.loadTrades();
+                        this.updateCharts();
+                    }
+                },
+
+                async switchAccount(accountId) {
+                    this.currentAccount = accountId;
+                    await this.loadTrades();
+                    this.updateCharts();
+                },
+
+                get currentAccountData() { return this.accounts.find(a => a.id === this.currentAccount) || this.accounts[0]; },
+
+                async loadTrades() {
+                    if (!this.currentAccount) {
+                        console.log('No current account, waiting...');
+                        return;
+                    }
+                    console.log('Loading trades for account:', this.currentAccount);
+                    try {
+                        const { data, error } = await supabase.from('trades').select('*').eq('user_id', currentUser.id).eq('account_id', this.currentAccount).order('date', { ascending: false });
+                        if (error) {
+                            console.error('Error loading trades:', error);
+                            this.trades = [];
+                        } else {
+                            this.trades = data || [];
+                            console.log('Trades loaded successfully:', data.length, 'trades');
+                            // Force UI update after trades load
+                            await this.$nextTick();
+                            setTimeout(() => this.updateCharts(), 200);
+                        }
+                    } catch (err) {
+                        console.error('Exception loading trades:', err);
+                        this.trades = [];
+                    }
+                },
+
+                async addTrade() {
+                    const entry = parseFloat(this.newTrade.entry);
+                    const exit = parseFloat(this.newTrade.exit);
+                    const size = parseFloat(this.newTrade.size);
+                    const stopLoss = parseFloat(this.newTrade.stopLoss);
+                    const pnlAmount = parseFloat(this.newTrade.pnlAmount);
+                    const risk = this.newTrade.type === 'Long' ? Math.abs(entry - stopLoss) : Math.abs(stopLoss - entry);
+                    const riskAmount = risk * size * 10000;
+                    const rr = riskAmount > 0 ? Math.abs(pnlAmount) / riskAmount : 0;
+
+                    const trade = { user_id: currentUser.id, account_id: this.currentAccount, symbol: this.newTrade.symbol, type: this.newTrade.type, entry, exit, size, stop_loss: stopLoss, pnl: pnlAmount, rr, strategy: this.newTrade.strategy, date: this.newTrade.date, notes: this.newTrade.notes };
+
+                    if (this.editingIndex >= 0) {
+                        const tradeId = this.trades[this.editingIndex].id;
+                        await supabase.from('trades').update(trade).eq('id', tradeId);
+                        this.editingIndex = -1;
+                    } else {
+                        await supabase.from('trades').insert([trade]);
+                        const newBalance = this.currentAccountData.balance + pnlAmount;
+                        await supabase.from('accounts').update({ balance: newBalance }).eq('id', this.currentAccount);
+                        const accountIndex = this.accounts.findIndex(a => a.id === this.currentAccount);
+                        if (accountIndex >= 0) this.accounts[accountIndex].balance = newBalance;
+                    }
+
+                    await this.loadTrades();
+                    this.resetForm();
+                    this.updateCharts();
+                },
+
+                editTrade(index) {
+                    const trade = this.trades[index];
+                    this.newTrade = { symbol: trade.symbol, type: trade.type, entry: trade.entry, exit: trade.exit, size: trade.size, stopLoss: trade.stop_loss, pnlAmount: trade.pnl, strategy: trade.strategy, date: trade.date, notes: trade.notes };
+                    this.editingIndex = index;
+                    this.currentView = 'dashboard';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                async deleteTrade(index) {
+                    if (confirm('Delete this trade?')) {
+                        const tradeId = this.trades[index].id;
+                        await supabase.from('trades').delete().eq('id', tradeId);
+                        await this.loadTrades();
+                        this.updateCharts();
+                    }
+                },
+
+                resetForm() { this.newTrade = { symbol: '', type: 'Long', entry: '', exit: '', size: '', stopLoss: '', pnlAmount: '', strategy: 'Breakout', date: new Date().toISOString().split('T')[0], notes: '' }; },
+
+                get filteredTrades() { return this.trades.filter(trade => trade.symbol.toLowerCase().includes(this.searchQuery.toLowerCase())); },
+                get totalPnL() { return this.trades.reduce((sum, trade) => sum + trade.pnl, 0); },
+                get winRate() { if (this.trades.length === 0) return 0; const wins = this.trades.filter(t => t.pnl > 0).length; return ((wins / this.trades.length) * 100).toFixed(1); },
+                get avgRR() { if (this.trades.length === 0) return 0; const total = this.trades.reduce((sum, trade) => sum + trade.rr, 0); return total / this.trades.length; },
+
+                initCharts() {
+                    this.createEquityChart();
+                    if (this.currentView === 'analytics') { this.createWinLossChart(); this.createStrategyChart(); this.createMonthlyChart(); }
+                },
+
+                updateCharts() {
+                    if (this.equityChart) this.equityChart.destroy();
+                    if (this.winLossChart) this.winLossChart.destroy();
+                    if (this.strategyChart) this.strategyChart.destroy();
+                    if (this.monthlyChart) this.monthlyChart.destroy();
+                    setTimeout(() => this.initCharts(), 100);
+                },
+
+                createEquityChart() {
+                    const ctx = document.getElementById('equityChart');
+                    if (!ctx) return;
+                    let equity = this.currentAccountData?.balance || 10000;
+                    const equityData = [equity];
+                    const labels = ['Start'];
+                    this.trades.forEach((trade, index) => { equity += trade.pnl; equityData.push(equity); labels.push(`Trade ${index + 1}`); });
+                    const isDark = document.documentElement.classList.contains('dark');
+                    this.equityChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Equity', data: equityData, borderColor: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, plugins: { legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } } }, scales: { y: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } }, x: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } } } } });
+                },
+
+                createWinLossChart() {
+                    const ctx = document.getElementById('winLossChart');
+                    if (!ctx) return;
+                    const wins = this.trades.filter(t => t.pnl > 0).length;
+                    const losses = this.trades.filter(t => t.pnl < 0).length;
+                    const isDark = document.documentElement.classList.contains('dark');
+                    this.winLossChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Wins', 'Losses'], datasets: [{ data: [wins, losses], backgroundColor: ['#10b981', '#ef4444'] }] }, options: { responsive: true, plugins: { legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } } } } });
+                },
+
+                createStrategyChart() {
+                    const ctx = document.getElementById('strategyChart');
+                    if (!ctx) return;
+                    const strategies = {};
+                    this.trades.forEach(trade => { if (!strategies[trade.strategy]) strategies[trade.strategy] = 0; strategies[trade.strategy] += trade.pnl; });
+                    const isDark = document.documentElement.classList.contains('dark');
+                    this.strategyChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(strategies), datasets: [{ label: 'P&L by Strategy', data: Object.values(strategies), backgroundColor: '#8b5cf6' }] }, options: { responsive: true, plugins: { legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } } }, scales: { y: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } }, x: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } } } } });
+                },
+
+                createMonthlyChart() {
+                    const ctx = document.getElementById('monthlyChart');
+                    if (!ctx) return;
+                    const monthly = {};
+                    this.trades.forEach(trade => { const month = trade.date.substring(0, 7); if (!monthly[month]) monthly[month] = 0; monthly[month] += trade.pnl; });
+                    const isDark = document.documentElement.classList.contains('dark');
+                    this.monthlyChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(monthly), datasets: [{ label: 'Monthly P&L', data: Object.values(monthly), backgroundColor: '#0ea5e9' }] }, options: { responsive: true, plugins: { legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } } }, scales: { y: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } }, x: { ticks: { color: isDark ? '#e5e7eb' : '#374151' }, grid: { color: isDark ? '#374151' : '#e5e7eb' } } } } });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
